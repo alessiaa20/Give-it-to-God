@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <meta charset="UTF-8">
 <title>Lay It Down — Give It to God</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +25,69 @@
 }
 
 *{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+<script>
+  // 1) config-ul tau (din tab-ul Config)
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB_EKQ043IqazKMXeTE_bUrRzLJ1W4NVRM",
+  authDomain: "give-it-to-god.firebaseapp.com",
+  projectId: "give-it-to-god",
+  storageBucket: "give-it-to-god.firebasestorage.app",
+  messagingSenderId: "930979536788",
+  appId: "1:930979536788:web:60540616ad9d51c3b2f981",
+  measurementId: "G-35M11HHJ5H"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // 2) semnare anonima (fara cont)
+  let userId = null;
+
+  auth.signInAnonymously().then((res) => {
+    userId = res.user.uid;
+    loadFromCloud(); // incarca rugaciunile de pe cloud
+  }).catch((err) => {
+    console.error("Auth error:", err);
+    alert("Eroare auth: " + err.message);
+  });
+
+  function cloudDoc() {
+    return db.collection("prayers").doc(userId);
+  }
+
+  async function loadFromCloud() {
+    try {
+      const doc = await cloudDoc().get();
+      if (doc.exists) {
+        prayers = doc.data().items || [];
+        localStorage.setItem("prayers", JSON.stringify(prayers));
+        render();
+      } else {
+        // daca nu exista in cloud, urcam ce ai local (prima oara)
+        await saveToCloud();
+      }
+    } catch (e) {
+      console.error("Load error:", e);
+    }
+  }
+
+  async function saveToCloud() {
+    if (!userId) return;
+    await cloudDoc().set({
+      items: prayers,
+      updated: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  // IMPORTANT: inlocuieste functia ta save() cu asta:
+  function save() {
+    localStorage.setItem("prayers", JSON.stringify(prayers));
+    saveToCloud();
+    render();
+  }
+</script>
 
 body{
   margin:0;

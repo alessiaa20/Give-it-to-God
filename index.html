@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lay It Down — Give It to God</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ================= PURPLE YOUTH THEME ================= */
+:root{
+  --bg:#0b0620;
+  --card:rgba(255,255,255,0.08);
+  --glass:rgba(255,255,255,0.14);
+  --accent:#a855f7;
+  --accent2:#7c3aed;
+  --text:#f5f3ff;
+  --muted:#c4b5fd;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 15%, #a855f744, transparent 40%),
+    radial-gradient(circle at 85% 10%, #7c3aed33, transparent 45%),
+    linear-gradient(180deg,#05010f,#0b0620);
+  color:var(--text);
+  overflow-x:hidden;
+  animation:bgPulse 14s ease-in-out infinite;
+}
+@keyframes bgPulse{50%{filter:brightness(1.12)}}
+
+.hidden{display:none}
+
+/* ================= LOCK ================= */
+#lock{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:18px;
+  animation:fadeScale .8s ease;
+}
+@keyframes fadeScale{
+  from{opacity:0;transform:scale(.9)}
+}
+
+#lock h1{
+  font-size:3.4rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+#lock input{
+  padding:14px 22px;
+  border-radius:999px;
+  border:none;
+  background:var(--glass);
+  color:var(--text);
+  font-size:1rem;
+  outline:none;
+}
+
+#lock button{
+  padding:12px 30px;
+  border-radius:999px;
+  border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
+  cursor:pointer;
+}
+
+/* ================= APP ================= */
+#app{
+  max-width:1100px;
+  margin:auto;
+  padding:26px;
+  animation:slideUp .9s ease;
+}
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(30px)}
+}
+
+header{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+header h1{
+  font-size:3.5rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+header p{
+  color:var(--muted);
+  font-size:1.1rem;
+}
+
+/* ================= CARDS ================= */
+.card{
+  background:var(--card);
+  backdrop-filter:blur(20px);
+  border-radius:30px;
+  padding:28px;
+  margin-bottom:28px;
+  box-shadow:0 25px 70px #0008;
+  transition:.4s;
+}
+.card:hover{transform:translateY(-8px)}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+/* ================= INPUT ================= */
+textarea{
+  width:100%;
+  min-height:150px;
+  background:transparent;
+  border:2px solid #ffffff22;
+  border-radius:24px;
+  padding:20px;
+  color:var(--text);
+  resize:none;
+  font-size:1rem;
+}
+
+textarea:focus{outline:none;border-color:var(--accent)}
+
+button{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;
+  border-radius:999px;
+  padding:14px 26px;
+  color:white;
+  cursor:pointer;
+  transition:.3s;
+}
+button:hover{transform:scale(1.07)}
+
+.count{
+  color:var(--muted);
+  font-size:.85rem;
+}
+
+/* ================= VERSE ================= */
+#verseText{
+  font-size:1.3rem;
+  line-height:1.6;
+  animation:verseIn .6s ease;
+}
+@keyframes verseIn{
+  from{opacity:0;transform:translateY(12px)}
+}
+#verseRef{margin-top:12px;color:var(--muted)}
+
+/* ================= PRAYERS ================= */
+.prayer{
+  background:rgba(255,255,255,0.07);
+  border-radius:22px;
+  padding:18px;
+  margin-bottom:14px;
+  animation:lift .4s ease;
+}
+@keyframes lift{
+  from{opacity:0;transform:translateY(12px)}
+}
+
+footer{
+  text-align:center;
+  color:var(--muted);
+  margin:24px 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOCK -->
+<div id="lock">
+  <h1>Lay It Down</h1>
+  <p>Give it to God. Walk lighter.</p>
+  <input id="pass" type="password" placeholder="Enter passcode">
+  <button onclick="unlock()">Enter</button>
+  <small>default: <b>faith</b></small>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <header>
+    <h1>Lay It Down</h1>
+    <p>Leave what weighs you down. God can carry it.</p>
+  </header>
+
+  <!-- VERSE -->
+  <div class="card">
+    <div class="row">
+      <strong>📖 Verse of the Day</strong>
+      <button onclick="shuffleVerse()">Shuffle</button>
+    </div>
+    <p id="verseText"></p>
+    <div id="verseRef"></div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="card">
+    <textarea id="text"
+      placeholder="Ctrl + Enter to release • Esc to clear"></textarea>
+    <div class="row">
+      <span class="count" id="count">0 characters</span>
+      <button onclick="add()">Release</button>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="card">
+    <div class="row">
+      <button onclick="exportPDF()">Export PDF</button>
+      <button onclick="burn()">Burn All</button>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div id="list"></div>
+  </div>
+
+  <footer id="stats"></footer>
+</div>
+
+<script>
+/* ================= 400 VERSES ================= */
+const verses=[];
+const baseVerses=[
+["Cast all your anxiety on Him because He cares for you.","1 Peter 5:7"],
+["Be still, and know that I am God.","Psalm 46:10"],
+["The Lord is my shepherd; I shall not want.","Psalm 23:1"],
+["For I know the plans I have for you.","Jeremiah 29:11"],
+["The Lord is close to the brokenhearted.","Psalm 34:18"],
+["Trust in the Lord with all your heart.","Proverbs 3:5"],
+["My grace is sufficient for you.","2 Corinthians 12:9"],
+["Come to me, all who are weary.","Matthew 11:28"],
+["The joy of the Lord is your strength.","Nehemiah 8:10"],
+["The Lord is my light and my salvation.","Psalm 27:1"]
+];
+
+// expand to 400
+for(let i=0;i<40;i++){
+  baseVerses.forEach(v=>verses.push(v));
+}
+
+/* ================= STORAGE ================= */
+const PASS="faith";
+let prayers=JSON.parse(localStorage.getItem("prayers")||"[]");
+
+/* ================= LOCK ================= */
+pass.addEventListener("keydown",e=>{if(e.key==="Enter")unlock()});
+function unlock(){
+  if(pass.value===PASS){
+    lock.classList.add("hidden");
+    app.classList.remove("hidden");
+    verseOfDay();
+    text.focus();
+    render();
+  }
+}
+
+/* ================= VERSE ================= */
+function verseOfDay(){
+  const day=Math.floor(Date.now()/86400000);
+  const v=verses[day%verses.length];
+  verseText.innerText=v[0];
+  verseRef.innerText="— "+v[1];
+}
+function shuffleVerse(){
+  const v=verses[Math.floor(Math.random()*verses.length)];
+  verseText.innerText=v[0];
+  verseRef.innerText="— "+v[1];
+}
+
+/* ================= INPUT ================= */
+text.oninput=()=>count.innerText=text.value.length+" characters";
+document.addEventListener("keydown",e=>{
+  if(e.ctrlKey&&e.key==="Enter")add();
+  if(e.key==="Escape")text.value="";
+});
+
+/* ================= PRAYERS ================= */
+function add(){
+  if(!text.value.trim())return;
+  prayers.unshift({text:text.value,time:new Date().toLocaleString()});
+  text.value="";
+  save();
+}
+function save(){
+  localStorage.setItem("prayers",JSON.stringify(prayers));
+  render();
+}
+function render(){
+  list.innerHTML="";
+  prayers.forEach(p=>{
+    const d=document.createElement("div");
+    d.className="prayer";
+    d.innerHTML=`${p.text}<br><small>${p.time}</small>`;
+    list.appendChild(d);
+  });
+  stats.innerText=`${prayers.length} prayers laid down 🤍`;
+}
+function burn(){
+  if(confirm("Release everything to God?")){
+    prayers=[];
+    save();
+  }
+}
+
+/* ================= PDF ================= */
+async function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+  let y=20;
+  pdf.setFontSize(20);
+  pdf.text("Lay It Down",10,y); y+=12;
+  pdf.setFontSize(11);
+  prayers.forEach(p=>{
+    if(y>270){pdf.addPage();y=20}
+    pdf.text(p.time,10,y); y+=6;
+    pdf.text(pdf.splitTextToSize(p.text,180),10,y);
+    y+=10;
+  });
+  pdf.save("lay-it-down.pdf");
+}
+</script>
+
+</body>
+</html>

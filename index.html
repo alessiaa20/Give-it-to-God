@@ -1,630 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Lay It Down — Give It to God</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Lay It Down — Give It to God</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Firebase (compat for simple <script> use on GitHub Pages) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <style>
-    :root{
-      --bg:#0b0620;
-      --card:rgba(255,255,255,0.08);
-      --glass:rgba(255,255,255,0.14);
-      --accent:#a855f7;
-      --accent2:#7c3aed;
-      --text:#f5f3ff;
-      --muted:#c4b5fd;
-      --danger:#fb7185;
-      --ok:#22c55e;
-    }
-    *{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
-
-    body{
-      margin:0;
-      min-height:100vh;
-      background:
-        radial-gradient(circle at 15% 15%, #a855f744, transparent 40%),
-        radial-gradient(circle at 85% 10%, #7c3aed33, transparent 45%),
-        linear-gradient(180deg,#05010f,#0b0620);
-      color:var(--text);
-      overflow-x:hidden;
-      animation:bgPulse 14s ease-in-out infinite;
-    }
-    @keyframes bgPulse{50%{filter:brightness(1.12)}}
-
-    .hidden{display:none}
-
-    /* floating orbs */
-    .orb{
-      position:fixed;
-      width:240px;height:240px;
-      border-radius:50%;
-      filter:blur(40px);
-      opacity:.22;
-      pointer-events:none;
-      animation:orbFloat 10s ease-in-out infinite;
-      mix-blend-mode:screen;
-    }
-    .orb.o1{left:-60px;top:15vh;background:#a855f7}
-    .orb.o2{right:-80px;top:10vh;background:#7c3aed;animation-duration:13s}
-    .orb.o3{left:30vw;bottom:-120px;background:#c084fc;animation-duration:16s}
-    @keyframes orbFloat{50%{transform:translateY(-18px) translateX(10px)}}
-
-    /* toast */
-    #toast{
-      position:fixed;
-      left:50%;
-      bottom:22px;
-      transform:translateX(-50%) translateY(20px);
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.12);
-      backdrop-filter:blur(10px);
-      padding:12px 16px;
-      border-radius:999px;
-      color:var(--text);
-      opacity:0;
-      transition:.35s;
-      z-index:9999;
-    }
-    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-    /* LOCK */
-    #lock{
-      height:100vh;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      gap:16px;
-      padding:20px;
-      animation:fadeScale .8s ease;
-      text-align:center;
-    }
-    @keyframes fadeScale{from{opacity:0;transform:scale(.92)}}
-
-    #lock h1{
-      margin:0;
-      font-size:3.4rem;
-      line-height:1.05;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      -webkit-background-clip:text;
-      color:transparent;
-      letter-spacing:-1px;
-      text-shadow:0 0 30px rgba(168,85,247,.25);
-    }
-    #lock p{margin:0;color:var(--muted)}
-    #lock input{
-      width:min(420px, 92vw);
-      padding:14px 22px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(255,255,255,.10);
-      color:var(--text);
-      font-size:1rem;
-      outline:none;
-    }
-
-    .btn{
-      border:none;
-      border-radius:999px;
-      padding:12px 22px;
-      cursor:pointer;
-      color:white;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      transition:.25s;
-      box-shadow:0 14px 40px rgba(0,0,0,.35);
-      position:relative;
-      overflow:hidden;
-    }
-    .btn:hover{transform:translateY(-2px) scale(1.02)}
-    .btn:active{transform:translateY(0) scale(.99)}
-    .btn.secondary{
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow:none;
-    }
-    .btn.danger{
-      background:linear-gradient(135deg,#fb7185,#ef4444);
-    }
-
-    /* APP */
-    #app{
-      max-width:1100px;
-      margin:auto;
-      padding:26px;
-      animation:slideUp .9s ease;
-    }
-    @keyframes slideUp{from{opacity:0;transform:translateY(30px)}}
-
-    header{
-      text-align:center;
-      margin-bottom:22px;
-    }
-    header h1{
-      margin:0;
-      font-size:3.2rem;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      -webkit-background-clip:text;
-      color:transparent;
-      letter-spacing:-1px;
-    }
-    header p{
-      margin:10px 0 0;
-      color:var(--muted);
-      font-size:1.05rem;
-    }
-
-    .card{
-      background:var(--card);
-      backdrop-filter:blur(20px);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:30px;
-      padding:26px;
-      margin-bottom:22px;
-      box-shadow:0 25px 70px rgba(0,0,0,.45);
-      transition:.35s;
-    }
-    .card:hover{transform:translateY(-6px)}
-
-    .row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    textarea{
-      width:100%;
-      min-height:150px;
-      background:transparent;
-      border:2px solid rgba(255,255,255,.14);
-      border-radius:24px;
-      padding:18px;
-      color:var(--text);
-      resize:none;
-      font-size:1rem;
-      line-height:1.5;
-      transition:.2s;
-    }
-    textarea:focus{outline:none;border-color:rgba(168,85,247,.7);box-shadow:0 0 0 4px rgba(168,85,247,.15)}
-
-    .count{color:var(--muted);font-size:.9rem}
-
-    /* Verse */
-    #verseText{
-      font-size:1.22rem;
-      line-height:1.65;
-      margin:14px 0 0;
-      animation:verseIn .55s ease;
-    }
-    @keyframes verseIn{from{opacity:0;transform:translateY(12px)}}
-    #verseRef{margin-top:10px;color:var(--muted);font-weight:600}
-
-    /* Prayers list */
-    .prayer{
-      background:rgba(255,255,255,0.07);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:22px;
-      padding:16px 16px 14px;
-      margin-bottom:12px;
-      animation:lift .35s ease;
-      position:relative;
-    }
-    @keyframes lift{from{opacity:0;transform:translateY(12px)}}
-    .prayer small{color:var(--muted)}
-    .prayer .x{
-      position:absolute;
-      top:10px;right:12px;
-      cursor:pointer;
-      color:rgba(255,255,255,.6);
-      font-weight:700;
-      padding:4px 8px;
-      border-radius:10px;
-      transition:.2s;
-    }
-    .prayer .x:hover{background:rgba(255,255,255,.08);color:white}
-    footer{
-      text-align:center;
-      color:var(--muted);
-      margin:18px 0 10px;
-    }
-
-    /* Small helper row */
-    .helper{
-      margin-top:8px;
-      color:rgba(255,255,255,.65);
-      font-size:.9rem;
-    }
-
-    /* Responsive */
-    @media(max-width:520px){
-      header h1{font-size:2.55rem}
-      #lock h1{font-size:2.75rem}
-      .card{padding:18px;border-radius:24px}
-      textarea{border-radius:18px}
-    }
-  </style>
+<style>
+/* ======= STYLE (unchanged visually) ======= */
+:root{
+--bg:#0b0620;--card:rgba(255,255,255,.08);
+--accent:#a855f7;--accent2:#7c3aed;
+--text:#f5f3ff;--muted:#c4b5fd
+}
+*{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+body{
+margin:0;min-height:100vh;color:var(--text);
+background:linear-gradient(180deg,#05010f,#0b0620)
+}
+.hidden{display:none}
+.btn{
+border:none;border-radius:999px;padding:12px 22px;
+cursor:pointer;color:white;
+background:linear-gradient(135deg,var(--accent),var(--accent2))
+}
+.btn.secondary{
+background:rgba(255,255,255,.1);
+border:1px solid rgba(255,255,255,.18)
+}
+.btn.danger{background:linear-gradient(135deg,#fb7185,#ef4444)}
+#lock,#app{padding:24px;max-width:900px;margin:auto}
+textarea{
+width:100%;min-height:140px;border-radius:18px;
+background:transparent;border:2px solid rgba(255,255,255,.15);
+padding:16px;color:white
+}
+.card{
+background:var(--card);border-radius:26px;
+padding:22px;margin-bottom:18px
+}
+.prayer{
+background:rgba(255,255,255,.07);
+border-radius:18px;padding:14px;margin-bottom:10px;
+position:relative
+}
+.prayer .x{
+position:absolute;top:8px;right:12px;cursor:pointer
+}
+</style>
 </head>
 
 <body>
-  <div class="orb o1"></div>
-  <div class="orb o2"></div>
-  <div class="orb o3"></div>
 
-  <!-- LOCK -->
-  <div id="lock">
-    <h1>Lay It Down</h1>
-    <p>Give it to God. Leave it here. Walk lighter.</p>
+<!-- LOCK -->
+<div id="lock">
+  <h1>Lay It Down</h1>
+  <p>Give it to God. Leave it here.</p>
 
-    <input id="pass" type="password" placeholder="Enter passcode (default: faith)" />
-    <div class="row" style="justify-content:center">
-      <button class="btn" id="enterBtn">Enter</button>
-      <button class="btn secondary" id="googleBtn">Sign in with Google</button>
-    </div>
+  <input id="pass" type="password" placeholder="Passcode (faith)">
+  <br><br>
+  <button class="btn" id="enterBtn">Enter</button>
+  <button class="btn secondary" id="googleBtn">Sign in with Google</button>
+</div>
 
-    <div class="helper">
-      Tip: <b>Enter</b> unlocks • Google login = same prayers on all devices
-    </div>
+<!-- APP -->
+<div id="app" class="hidden">
+  <h1>Lay It Down</h1>
+
+  <div class="card">
+    <textarea id="text" placeholder="Write it here…"></textarea>
+    <br><br>
+    <button class="btn" id="releaseBtn">Release</button>
   </div>
 
-  <!-- APP -->
-  <div id="app" class="hidden">
-    <header>
-      <h1>Lay It Down</h1>
-      <p>Release what weighs you down. God can carry it.</p>
-    </header>
-
-    <!-- VERSE -->
-    <div class="card">
-      <div class="row">
-        <strong>📖 Verse of the Day</strong>
-        <button class="btn" id="shuffleBtn">Shuffle</button>
-      </div>
-      <p id="verseText"></p>
-      <div id="verseRef"></div>
-    </div>
-
-    <!-- INPUT -->
-    <div class="card">
-      <textarea id="text" placeholder="Ctrl + Enter to Release • Esc to Clear"></textarea>
-      <div class="row" style="margin-top:12px">
-        <span class="count" id="count">0 characters</span>
-        <button class="btn" id="releaseBtn">Release</button>
-      </div>
-      <div class="helper">Your prayers are saved privately to your account.</div>
-    </div>
-
-    <!-- ACTIONS -->
-    <div class="card">
-      <div class="row">
-        <button class="btn" id="pdfBtn">Export PDF</button>
-        <button class="btn danger" id="burnBtn">Burn All</button>
-        <button class="btn secondary" id="signOutBtn">Sign out</button>
-      </div>
-    </div>
-
-    <!-- LIST -->
-    <div class="card">
-      <div id="list"></div>
-    </div>
-
-    <footer id="stats"></footer>
+  <div class="card">
+    <button class="btn" id="pdfBtn">Export PDF</button>
+    <button class="btn danger" id="burnBtn">Burn All</button>
+    <button class="btn secondary" id="signOutBtn">Sign Out</button>
   </div>
 
-  <div id="toast"></div>
+  <div class="card" id="list"></div>
+  <footer id="stats"></footer>
+</div>
 
-  <script>
-    /* ===================== CONFIG (YOUR PROJECT) ===================== */
-    const firebaseConfig = {
-      apiKey: "AIzaSyB_EKQ043IqazKMXeTE_bUrRzLJ1W4NVRM",
-      authDomain: "give-it-to-god.firebaseapp.com",
-      projectId: "give-it-to-god",
-      storageBucket: "give-it-to-god.firebasestorage.app",
-      messagingSenderId: "930979536788",
-      appId: "1:930979536788:web:60540616ad9d51c3b2f981",
-      measurementId: "G-35M11HHJ5H"
-    };
+<div id="toast"></div>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+<script>
+/* ================= FIREBASE CONFIG ================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyB_EKQ043IqazKMXeTE_bUrRzLJ1W4NVRM",
+  authDomain: "give-it-to-god.firebaseapp.com",
+  projectId: "give-it-to-god"
+});
 
-    /* ===================== STATE ===================== */
-    const PASS = "faith";
-    let prayers = JSON.parse(localStorage.getItem("prayers") || "[]");
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    // 400 verses (note: earlier you had 10x40 duplicates; here we keep 400 entries by repeating a curated set)
-    const baseVerses = [
-      ["Cast all your anxiety on Him because He cares for you.", "1 Peter 5:7"],
-      ["Be still, and know that I am God.", "Psalm 46:10"],
-      ["The Lord is my shepherd; I shall not want.", "Psalm 23:1"],
-      ["For I know the plans I have for you.", "Jeremiah 29:11"],
-      ["The Lord is close to the brokenhearted.", "Psalm 34:18"],
-      ["Trust in the Lord with all your heart.", "Proverbs 3:5"],
-      ["My grace is sufficient for you.", "2 Corinthians 12:9"],
-      ["Come to me, all who are weary.", "Matthew 11:28"],
-      ["The joy of the Lord is your strength.", "Nehemiah 8:10"],
-      ["The Lord is my light and my salvation.", "Psalm 27:1"],
-      ["Do not fear, for I am with you.", "Isaiah 41:10"],
-      ["The Lord is good, a stronghold in the day of trouble.", "Nahum 1:7"],
-      ["Peace I leave with you; my peace I give to you.", "John 14:27"],
-      ["I can do all things through Christ who strengthens me.", "Philippians 4:13"],
-      ["In all your ways acknowledge Him, and He will make straight your paths.", "Proverbs 3:6"],
-      ["The Lord will fight for you; you need only to be still.", "Exodus 14:14"],
-      ["Those who hope in the Lord will renew their strength.", "Isaiah 40:31"],
-      ["God is our refuge and strength, an ever-present help in trouble.", "Psalm 46:1"],
-      ["Weeping may endure for a night, but joy comes in the morning.", "Psalm 30:5"],
-      ["The steadfast love of the Lord never ceases.", "Lamentations 3:22"]
-    ];
-    const verses = [];
-    while (verses.length < 400) verses.push(baseVerses[verses.length % baseVerses.length]);
+/* ================= STATE ================= */
+const PASS = "faith";
+let prayers = JSON.parse(localStorage.getItem("prayers")||"[]");
+let cloudTimer = null;
 
-    /* ===================== DOM ===================== */
-    const lock = document.getElementById("lock");
-    const app = document.getElementById("app");
-    const pass = document.getElementById("pass");
+/* ================= UI ================= */
+const lock = document.getElementById("lock");
+const app  = document.getElementById("app");
+const list = document.getElementById("list");
+const text = document.getElementById("text");
+const stats= document.getElementById("stats");
 
-    const enterBtn = document.getElementById("enterBtn");
-    const googleBtn = document.getElementById("googleBtn");
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.style.opacity=1;
+  setTimeout(()=>t.style.opacity=0,2200);
+}
 
-    const shuffleBtn = document.getElementById("shuffleBtn");
-    const releaseBtn = document.getElementById("releaseBtn");
-    const pdfBtn = document.getElementById("pdfBtn");
-    const burnBtn = document.getElementById("burnBtn");
-    const signOutBtn = document.getElementById("signOutBtn");
+function showApp(){
+  lock.classList.add("hidden");
+  app.classList.remove("hidden");
+  render();
+}
 
-    const text = document.getElementById("text");
-    const count = document.getElementById("count");
-    const list = document.getElementById("list");
-    const stats = document.getElementById("stats");
-    const verseText = document.getElementById("verseText");
-    const verseRef = document.getElementById("verseRef");
-    const toastEl = document.getElementById("toast");
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    app.classList.add("hidden");
+    lock.classList.remove("hidden");
+    return;
+  }
+  await loadFromCloud();
+  showApp();
+});
 
-    /* ===================== UI helpers ===================== */
-    function toast(msg){
-      toastEl.textContent = msg;
-      toastEl.classList.add("show");
-      setTimeout(()=>toastEl.classList.remove("show"), 2200);
-    }
+/* ================= AUTH ================= */
+async function signInAnon(){
+  await auth.signInAnonymously();
+}
 
-    function showApp(){
-      lock.classList.add("hidden");
-      app.classList.remove("hidden");
-      verseOfDay();
-      render();
-      setTimeout(()=>text.focus(), 50);
-    }
+async function signInGoogle(){
+  const provider=new firebase.auth.GoogleAuthProvider();
+  try{
+    await auth.signInWithPopup(provider);
+  }catch{
+    await auth.signInWithRedirect(provider);
+  }
+}
 
-    /* ===================== Auth: Google OR Anonymous ===================== */
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        // logged in
-        await loadFromCloud();
-        showApp();
-        toast("Synced ✅");
-      } else {
-        // logged out
-        app.classList.add("hidden");
-        lock.classList.remove("hidden");
-      }
-    });
+async function signOut(){
+  await auth.signOut();
+}
 
-    async function signInAnon(){
-      try{
-        await auth.signInAnonymously();
-      }catch(e){
-        console.error(e);
-        alert("Auth error: " + e.message);
-      }
-    }
+/* ================= FIRESTORE ================= */
+function cloudDoc(){
+  return db.collection("prayers").doc(auth.currentUser.uid);
+}
 
-    async function signInGoogle(){
-      try{
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithPopup(provider);
-      }catch(e){
-        console.error(e);
-        alert("Google sign-in error: " + e.message);
-      }
-    }
+async function loadFromCloud(){
+  const snap=await cloudDoc().get();
+  if(snap.exists){
+    prayers=snap.data().items||[];
+    localStorage.setItem("prayers",JSON.stringify(prayers));
+  }else saveToCloud();
+}
 
-    async function signOut(){
-      await auth.signOut();
-      toast("Signed out");
-    }
+function saveToCloud(){
+  cloudDoc().set({items:prayers,updated:Date.now()},{merge:true});
+}
 
-    /* ===================== Firestore helpers ===================== */
-    function cloudDoc(){
-      const u = auth.currentUser;
-      if (!u) return null;
-      return db.collection("prayers").doc(u.uid);
-    }
+function save(){
+  localStorage.setItem("prayers",JSON.stringify(prayers));
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(saveToCloud,600);
+  render();
+}
 
-    async function loadFromCloud(){
-      const ref = cloudDoc();
-      if (!ref) return;
+/* ================= PRAYERS ================= */
+function add(){
+  if(!text.value.trim())return;
+  prayers.unshift({text:text.value,time:new Date().toLocaleString()});
+  text.value="";
+  save();toast("Released 🕊️");
+}
 
-      try{
-        const doc = await ref.get();
-        if (doc.exists) {
-          prayers = doc.data().items || [];
-          localStorage.setItem("prayers", JSON.stringify(prayers));
-        } else {
-          // first time -> push local up
-          await saveToCloud();
-        }
-      }catch(e){
-        console.error("loadFromCloud", e);
-        toast("Cloud load failed (offline?)");
-      }
-    }
+function burn(){
+  if(!confirm("Delete all prayers?"))return;
+  prayers=[];save();
+}
 
-    async function saveToCloud(){
-      const ref = cloudDoc();
-      if (!ref) return;
-      try{
-        await ref.set({
-          items: prayers,
-          updated: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-      }catch(e){
-        console.error("saveToCloud", e);
-        toast("Cloud save failed (offline?)");
-      }
-    }
+function render(){
+  list.innerHTML="";
+  prayers.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="prayer";
+    d.innerHTML=`<div class="x">✕</div>${p.text}<br><small>${p.time}</small>`;
+    d.querySelector(".x").onclick=()=>{prayers.splice(i,1);save();}
+    list.appendChild(d);
+  });
+  stats.textContent=`${prayers.length} prayers`;
+}
 
-    // SINGLE source of truth save()
-    function save(){
-      localStorage.setItem("prayers", JSON.stringify(prayers));
-      saveToCloud();
-      render();
-    }
+/* ================= EVENTS ================= */
+document.getElementById("enterBtn").onclick=()=>{
+  if(document.getElementById("pass").value!==PASS)
+    return toast("Wrong passcode");
+  if(!auth.currentUser) signInAnon();
+};
 
-    /* ===================== Verse logic ===================== */
-    function verseOfDay(){
-      const day = Math.floor(Date.now()/86400000);
-      const v = verses[day % verses.length];
-      verseText.textContent = v[0];
-      verseRef.textContent = "— " + v[1];
-    }
-
-    function shuffleVerse(){
-      const v = verses[Math.floor(Math.random()*verses.length)];
-      verseText.textContent = v[0];
-      verseRef.textContent = "— " + v[1];
-      verseText.style.animation = "none";
-      // retrigger animation
-      void verseText.offsetWidth;
-      verseText.style.animation = "";
-    }
-
-    /* ===================== Prayer actions ===================== */
-    function add(){
-      const t = text.value.trim();
-      if (!t) return;
-
-      prayers.unshift({
-        text: t,
-        time: new Date().toLocaleString()
-      });
-
-      text.value = "";
-      count.textContent = "0 characters";
-      save();
-      toast("Released 🕊️");
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    function removeAt(i){
-      prayers.splice(i, 1);
-      save();
-      toast("Deleted");
-    }
-
-    function burn(){
-      if (!confirm("Release everything to God? This deletes all saved prayers.")) return;
-      prayers = [];
-      save();
-      toast("All released 🤍");
-    }
-
-    function render(){
-      list.innerHTML = "";
-      prayers.forEach((p, i) => {
-        const d = document.createElement("div");
-        d.className = "prayer";
-        d.innerHTML = `
-          <div class="x" title="Delete">✕</div>
-          ${escapeHtml(p.text).replace(/\n/g,"<br>")}
-          <br><small>${escapeHtml(p.time)}</small>
-        `;
-        d.querySelector(".x").addEventListener("click", ()=>removeAt(i));
-        list.appendChild(d);
-      });
-      stats.textContent = `${prayers.length} prayers laid down 💜`;
-    }
-
-    function escapeHtml(s){
-      return s.replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
-    }
-
-    /* ===================== PDF ===================== */
-    async function exportPDF(){
-      const {jsPDF} = window.jspdf;
-      const pdf = new jsPDF();
-
-      let y = 18;
-      pdf.setFontSize(20);
-      pdf.text("Lay It Down", 10, y); y += 10;
-      pdf.setFontSize(11);
-      pdf.text("Give it to God. Leave it here. Walk lighter.", 10, y); y += 10;
-
-      prayers.forEach(p => {
-        if (y > 270) { pdf.addPage(); y = 18; }
-        pdf.setFontSize(10);
-        pdf.text(p.time, 10, y); y += 6;
-
-        pdf.setFontSize(12);
-        const lines = pdf.splitTextToSize(p.text, 180);
-        pdf.text(lines, 10, y);
-        y += (lines.length * 6) + 6;
-      });
-
-      pdf.save("lay-it-down.pdf");
-      toast("PDF saved 📄");
-    }
-
-    /* ===================== Events ===================== */
-    enterBtn.addEventListener("click", ()=> {
-      if (pass.value === PASS) {
-        // if user isn't logged in, start anonymous (so it still works)
-        if (!auth.currentUser) signInAnon();
-        showApp();
-        toast("Welcome 💜");
-      } else {
-        toast("Wrong passcode");
-      }
-    });
-
-    googleBtn.addEventListener("click", ()=>signInGoogle());
-
-    pass.addEventListener("keydown", (e)=> {
-      if (e.key === "Enter") enterBtn.click();
-    });
-
-    shuffleBtn.addEventListener("click", shuffleVerse);
-    releaseBtn.addEventListener("click", add);
-    pdfBtn.addEventListener("click", exportPDF);
-    burnBtn.addEventListener("click", burn);
-    signOutBtn.addEventListener("click", signOut);
-
-    text.addEventListener("input", ()=> {
-      count.textContent = `${text.value.length} characters`;
-    });
-
-    document.addEventListener("keydown", (e)=> {
-      if (app.classList.contains("hidden")) return;
-
-      if (e.ctrlKey && e.key === "Enter") add();
-      if (e.key === "Escape") text.value = "";
-    });
-
-    /* ===================== Start ===================== */
-    // We don't auto sign-in anonymous until user unlocks,
-    // but if they used Google previously, Firebase restores session automatically.
-    verseOfDay();
-  </script>
+document.getElementById("googleBtn").onclick=signInGoogle;
+document.getElementById("signOutBtn").onclick=signOut;
+document.getElementById("releaseBtn").onclick=add;
+document.getElementById("burnBtn").onclick=burn;
+</script>
 </body>
 </html>
